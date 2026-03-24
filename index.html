@@ -84,8 +84,7 @@ Bölüm 1 hedef: 1.000 puan</div>
   <button class="cbtn" id="btnL">◀</button>
   <button class="cbtn" id="btnU">↑</button>
   <button class="cbtn" id="btnR">▶</button>
-  <button class="cbtn" id="btnD" style="font-size:14px;padding:12px 10px;">▼▼<br><span style="font-size:9px;color:#6b6b8a">SOFT</span></button>
-  <button class="cbtn" id="btnHD" style="font-size:14px;padding:12px 10px;">⬇<br><span style="font-size:9px;color:#6b6b8a">DROP</span></button>
+  <button class="cbtn" id="btnD" style="font-size:14px;padding:12px 14px;">⬇<br><span style="font-size:9px;color:#6b6b8a">TAP/HOLD</span></button>
 </div>
 <div class="hint">Swipe de çalışır &nbsp;|&nbsp; Boşluk = anında düş &nbsp;|&nbsp; ⚡ 3+ sıra = şimşek!</div>
 
@@ -281,11 +280,43 @@ function act(a){
 }
 
 // butonlar
-[['btnL','l'],['btnU','u'],['btnR','r'],['btnD','soft'],['btnHD','d']].forEach(([id,a])=>{
+[['btnL','l'],['btnU','u'],['btnR','r']].forEach(([id,a])=>{
   const btn=document.getElementById(id);
   btn.addEventListener('touchstart',e=>{e.preventDefault();act(a);},{passive:false});
   btn.addEventListener('mousedown',()=>act(a));
 });
+
+// Tek drop butonu: basılı tut 500ms = hard drop, kısa tık = soft drop
+(function(){
+  const btn=document.getElementById('btnD');
+  let holdTimer=null;
+  let didHardDrop=false;
+
+  function onStart(e){
+    e.preventDefault();
+    didHardDrop=false;
+    holdTimer=setTimeout(()=>{
+      didHardDrop=true;
+      act('d'); // hard drop
+    },500);
+  }
+  function onEnd(e){
+    e.preventDefault();
+    clearTimeout(holdTimer);
+    if(!didHardDrop) act('soft'); // kısa tık = soft
+  }
+  function onCancel(){
+    clearTimeout(holdTimer);
+    didHardDrop=false;
+  }
+
+  btn.addEventListener('touchstart',onStart,{passive:false});
+  btn.addEventListener('touchend',onEnd,{passive:false});
+  btn.addEventListener('touchcancel',onCancel,{passive:false});
+  btn.addEventListener('mousedown',onStart);
+  btn.addEventListener('mouseup',onEnd);
+  btn.addEventListener('mouseleave',onCancel);
+})();
 
 // swipe
 let tx=0,ty=0,tMoved=false;
